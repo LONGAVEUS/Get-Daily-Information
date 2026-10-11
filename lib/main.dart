@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'home.dart';
+import 'welcome.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,10 +14,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 249, 249, 249)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromARGB(255, 249, 249, 249),
+        ),
         scaffoldBackgroundColor: Colors.black,
+
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+          },
+        ),
       ),
-      home: const HomePage(),
+      home: const WelcomePage(),
     );
   }
 }
