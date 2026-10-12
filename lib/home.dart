@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -13,6 +14,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool isListening = false;
   bool isResultAvailable = false;
+
+  bool hasSpoken = false;
+  Timer? _silenceTimer;
+
   final Color neonYellow = const Color(0xFFE6FF00);
   final Color textWhite = Colors.white;
   final Color backgroundBlack = Colors.black;
@@ -28,22 +33,73 @@ class _HomePageState extends State<HomePage> {
     await _tts.setLanguage("id-ID");
     await _tts.setSpeechRate(0.45);
     await _tts.setVolume(1.0);
-
     await Future.delayed(const Duration(milliseconds: 1000));
-
     _tts.speak("Halo. Informasi apa yang ingin anda ketahui?");
   }
 
-  Future<void> _startDelayToResult() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
+  @override
+  void dispose() {
+    _silenceTimer?.cancel();
+    _tts.stop();
+    super.dispose();
+  }
 
-    if (mounted && isListening) {
+  void _startSilenceTimer() {
+    _silenceTimer?.cancel();
+    _silenceTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted && isListening) {
+        if (!hasSpoken) {
+          setState(() {
+            isListening = false;
+          });
+          HapticFeedback.lightImpact();
+        } else {
+          _processResult();
+        }
+      }
+    });
+  }
+
+  void _onWordDetectedBySTT() {
+    setState(() {
+      hasSpoken = true;
+    });
+    _startSilenceTimer();
+  }
+
+  void _processResult() {
+    setState(() {
+      isListening = false;
+      isResultAvailable = true;
+    });
+    HapticFeedback.heavyImpact();
+    _tts.speak("Sekarang pukul 10.30 pagi, cuaca cerah.");
+  }
+
+  void _handleScreenTap() {
+    HapticFeedback.mediumImpact();
+
+    if (isResultAvailable) {
+      setState(() {
+        isResultAvailable = false;
+      });
+      _tts.stop();
+    } else if (isListening) {
       setState(() {
         isListening = false;
-        isResultAvailable = true;
       });
-      HapticFeedback.heavyImpact();
-      _tts.speak("Sekarang pukul 10.30 pagi, cuaca cerah.");
+      _silenceTimer?.cancel();
+    } else {
+      setState(() {
+        isListening = true;
+        hasSpoken = false;
+      });
+
+      _startSilenceTimer();
+
+      Future.delayed(const Duration(seconds: 1), () {
+        _onWordDetectedBySTT();
+      });
     }
   }
 
@@ -63,21 +119,7 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(31),
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              if (isResultAvailable) {
-                setState(() {
-                  isResultAvailable = false;
-                });
-              } else if (!isListening) {
-                setState(() {
-                  isListening = !isListening;
-                });
-                if (isListening) {
-                  _startDelayToResult();
-                }
-              }
-            },
+            onTap: _handleScreenTap,
             child: Center(
               child: isResultAvailable
                   ? _buildResultUI()
@@ -111,20 +153,9 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         const SizedBox(height: 30),
-        ElevatedButton(
-          onPressed: () {
-            setState(() {
-              isListening = !isListening;
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: backgroundBlack,
-            shape: const CircleBorder(),
-            padding: const EdgeInsets.all(30),
-            side: BorderSide(color: neonYellow, width: 3),
-          ),
-          child: Icon(Icons.graphic_eq, color: neonYellow, size: 32),
-        ),
+
+        _buildMicButton(),
+
         const SizedBox(height: 20),
         Text(
           'Halo Pengguna!',
@@ -160,35 +191,33 @@ class _HomePageState extends State<HomePage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ElevatedButton(
-          onPressed: () {
-            setState(() {
-              isListening = false;
-              isResultAvailable = false;
-            });
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: backgroundBlack,
-            shape: const CircleBorder(),
-            padding: const EdgeInsets.all(30),
-            side: BorderSide(color: neonYellow, width: 3),
-          ),
-          child: Icon(Icons.graphic_eq, color: neonYellow, size: 32),
-        ),
+        _buildMicButton(),
 
         const SizedBox(height: 30),
-
         Text(
           '"Sekarang pukul 10.30 pagi, cuaca cerah."',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
             color: textWhite,
-            height: 1.3, 
+            height: 1.3,
           ),
           textAlign: TextAlign.center,
         ),
       ],
+    );
+  }
+
+  Widget _buildMicButton() {
+    return ElevatedButton(
+      onPressed: _handleScreenTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundBlack,
+        shape: const CircleBorder(),
+        padding: const EdgeInsets.all(30),
+        side: BorderSide(color: neonYellow, width: 3),
+      ),
+      child: Icon(Icons.graphic_eq, color: neonYellow, size: 32),
     );
   }
 }
