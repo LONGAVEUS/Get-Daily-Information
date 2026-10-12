@@ -14,9 +14,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool isListening = false;
   bool isResultAvailable = false;
-
   bool hasSpoken = false;
   Timer? _silenceTimer;
+
+  String _teksHasilJawaban = ""; 
 
   final Color neonYellow = const Color(0xFFE6FF00);
   final Color textWhite = Colors.white;
@@ -44,14 +45,23 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+  String _generateResponse(String userInput) {
+    String text = userInput.toLowerCase();
+    DateTime now = DateTime.now();
+
+    if (text.contains("jam") || text.contains("waktu") || text.contains("pukul")) {
+      return "Saat ini menunjukkan pukul ${now.hour} lewat ${now.minute} menit.";
+    } else {
+      return "Maaf, coba tanyakan jam.";
+    }
+  }
+
   void _startSilenceTimer() {
     _silenceTimer?.cancel();
     _silenceTimer = Timer(const Duration(seconds: 3), () {
       if (mounted && isListening) {
         if (!hasSpoken) {
-          setState(() {
-            isListening = false;
-          });
+          setState(() { isListening = false; });
           HapticFeedback.lightImpact();
         } else {
           _processResult();
@@ -61,40 +71,38 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onWordDetectedBySTT() {
-    setState(() {
-      hasSpoken = true;
-    });
-    _startSilenceTimer();
+    setState(() { hasSpoken = true; });
+    _startSilenceTimer(); 
   }
 
   void _processResult() {
+
+    String kalimatDummy = "halo jam berapa sekarang";
+    String jawaban = _generateResponse(kalimatDummy);
+
     setState(() {
       isListening = false;
       isResultAvailable = true;
+      _teksHasilJawaban = jawaban; // Gunakan teks dinamis
     });
     HapticFeedback.heavyImpact();
-    _tts.speak("Sekarang pukul 10.30 pagi, cuaca cerah.");
+    _tts.speak(jawaban);
   }
 
   void _handleScreenTap() {
     HapticFeedback.mediumImpact();
 
     if (isResultAvailable) {
-      setState(() {
-        isResultAvailable = false;
-      });
+      setState(() { isResultAvailable = false; });
       _tts.stop();
     } else if (isListening) {
-      setState(() {
-        isListening = false;
-      });
+      setState(() { isListening = false; });
       _silenceTimer?.cancel();
     } else {
       setState(() {
         isListening = true;
         hasSpoken = false;
       });
-
       _startSilenceTimer();
 
       Future.delayed(const Duration(seconds: 1), () {
@@ -108,8 +116,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: backgroundBlack,
       body: Container(
-        width: double.infinity,
-        height: double.infinity,
+        width: double.infinity, height: double.infinity,
         decoration: BoxDecoration(
           color: backgroundBlack,
           border: Border.all(color: neonYellow, width: 4.0),
@@ -135,36 +142,13 @@ class _HomePageState extends State<HomePage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          'Tekan Layar',
-          style: TextStyle(
-            fontSize: 60,
-            fontWeight: FontWeight.bold,
-            color: textWhite,
-          ),
-        ),
+        Text('Tekan Layar', style: TextStyle(fontSize: 60, fontWeight: FontWeight.bold, color: textWhite)),
         const SizedBox(height: 5),
-        Text(
-          'Tekan layar dimana pun',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textWhite,
-          ),
-        ),
+        Text('Tekan layar dimana pun', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textWhite)),
         const SizedBox(height: 30),
-
         _buildMicButton(),
-
         const SizedBox(height: 20),
-        Text(
-          'Halo Pengguna!',
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.bold,
-            color: textWhite,
-          ),
-        ),
+        Text('Halo Pengguna!', style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: textWhite)),
       ],
     );
   }
@@ -175,14 +159,7 @@ class _HomePageState extends State<HomePage> {
       children: [
         SpinKitThreeBounce(color: neonYellow, size: 40.0),
         const SizedBox(height: 30),
-        Text(
-          'Mendengarkan...',
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-            color: textWhite,
-          ),
-        ),
+        Text('Mendengarkan...', style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: textWhite)),
       ],
     );
   }
@@ -192,17 +169,14 @@ class _HomePageState extends State<HomePage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _buildMicButton(),
-
         const SizedBox(height: 30),
-        Text(
-          '"Sekarang pukul 10.30 pagi, cuaca cerah."',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: textWhite,
-            height: 1.3,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            '"$_teksHasilJawaban"', // Tampilkan dari variabel
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textWhite, height: 1.3),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -212,10 +186,8 @@ class _HomePageState extends State<HomePage> {
     return ElevatedButton(
       onPressed: _handleScreenTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundBlack,
-        shape: const CircleBorder(),
-        padding: const EdgeInsets.all(30),
-        side: BorderSide(color: neonYellow, width: 3),
+        backgroundColor: backgroundBlack, shape: const CircleBorder(),
+        padding: const EdgeInsets.all(30), side: BorderSide(color: neonYellow, width: 3),
       ),
       child: Icon(Icons.graphic_eq, color: neonYellow, size: 32),
     );
