@@ -51,8 +51,19 @@ class _HomePageState extends State<HomePage> {
 
     if (text.contains("jam") || text.contains("waktu") || text.contains("pukul")) {
       return "Saat ini menunjukkan pukul ${now.hour} lewat ${now.minute} menit.";
-    } else {
-      return "Maaf, coba tanyakan jam.";
+    } 
+    
+    else if (text.contains("tanggal") || text.contains("hari")) {
+      List<String> namaHari = ["", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+      List<String> namaBulan = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      
+      String hariIni = namaHari[now.weekday];
+      String bulanIni = namaBulan[now.month];
+      
+      return "Hari ini adalah hari $hariIni, tanggal ${now.day} $bulanIni ${now.year}.";
+    } 
+    else {
+      return "Maaf, saya belum mengerti perintah Anda.";
     }
   }
 
