@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt; 
+import 'service/command_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -52,35 +53,6 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-
-  String _generateResponse(String userInput) {
-    String text = userInput.toLowerCase();
-    DateTime now = DateTime.now();
-
-    if (text.contains("jam") || text.contains("waktu") || text.contains("pukul")) {
-      return "Saat ini menunjukkan pukul ${now.hour} lewat ${now.minute} menit.";
-    } 
-    else if (text.contains("tanggal") || text.contains("hari")) {
-      List<String> namaHari = [
-        "", "Senin", "Selasa", 
-        "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
-      List<String> namaBulan = [
-        "", "Januari", "Februari", "Maret", "April", 
-        "Mei", "Juni", "Juli", "Agustus", "September", 
-        "Oktober", "November", "Desember"];
-      
-      String hariIni = namaHari[now.weekday];
-      String bulanIni = namaBulan[now.month];
-      
-      return "Hari ini adalah hari $hariIni, tanggal ${now.day} $bulanIni ${now.year}.";
-    } 
-    else if (text.isEmpty) {
-      return "Maaf, saya tidak mendengar suara Anda.";
-    } else {
-      return "Maaf, saya belum mengerti perintah: $text. Coba tanyakan jam atau tanggal.";
-    }
-  }
-
   void _startSilenceTimer() {
     _silenceTimer?.cancel();
     _silenceTimer = Timer(const Duration(seconds: 3), () {
@@ -121,7 +93,7 @@ class _HomePageState extends State<HomePage> {
   void _processResult() {
     _speech.stop(); 
 
-    String jawaban = _generateResponse(_recognizedWords);
+    String jawaban = CommandService().generateResponse(_recognizedWords);
 
     setState(() {
       isListening = false;
