@@ -16,7 +16,7 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 
   void _navigateToHome() async {
-    await Future.delayed(const Duration(milliseconds: 2500)); // Delay for 2.5 seconds
+    await Future.delayed(const Duration(milliseconds: 2500));
 
     if (mounted) {
       Navigator.pushReplacement(
