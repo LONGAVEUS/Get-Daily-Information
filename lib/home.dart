@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
     await _speech.initialize();
 
     await Future.delayed(const Duration(milliseconds: 1000));
-    _tts.speak("Halo. Informasi apa yang ingin anda ketahui?");
+    _tts.speak("Halo Pengguna. Informasi Apa yg ingin anda ketahui?");
   }
 
   @override
@@ -90,10 +90,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _processResult() {
+  Future<void> _processResult() async {
     _speech.stop(); 
 
-    String jawaban = CommandService().generateResponse(_recognizedWords);
+    String jawaban = await CommandService().generateResponse(_recognizedWords);
 
     setState(() {
       isListening = false;
@@ -186,7 +186,7 @@ class _HomePageState extends State<HomePage> {
         Text(
           _recognizedWords.isEmpty ? 'Mendengarkan...' : _recognizedWords,
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 24, 
             fontWeight: FontWeight.bold,
             color: textWhite
           ),
