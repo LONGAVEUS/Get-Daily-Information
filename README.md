@@ -1,4 +1,4 @@
-# 🦾 NETRA: Asisten Suara Cerdas untuk Tunanetra
+# NETRA: Asisten Suara Cerdas untuk Tunanetra
 
 **NETRA** adalah aplikasi mobile berbasis Flutter yang dirancang khusus untuk membantu penyandang tunanetra mendapatkan informasi real-time (waktu, cuaca, dan lokasi detail) hanya melalui perintah suara, tanpa perlu berinteraksi dengan layar yang rumit.
 
