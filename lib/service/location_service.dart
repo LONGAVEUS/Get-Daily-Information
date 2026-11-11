@@ -57,13 +57,20 @@ class LocationService {
         if (data['address'] != null) {
           final address = data['address'];
 
-          String jalan = address['road'] ?? address['pedestrian'] ?? " ";
-
-          String bangunan = address['building'] ?? address['amenity'] ?? " ";
-
-          String kota = address['city'] ?? " ";
-
-          String detailLokasi = "Anda saat ini sedang berada $jalan";
+          String jalan = (address['road'] ?? address['pedestrian'] ?? "").toString().trim();
+          String bangunan = (address['building'] ?? address['amenity'] ?? "").toString().trim();
+          String kota = (address['city'] ?? "").toString().trim();
+          String detailLokasi = "Anda saat ini sedang berada";
+          
+          if (jalan.isEmpty) {
+              jalan = (address['suburb'] ?? address['neighbourhood'] ?? "").toString().trim();
+          }
+    
+          if (jalan.isNotEmpty) {
+              detailLokasi += " $jalan";
+          } else {
+              detailLokasi += " di area yang tidak terpetakan";
+          }
 
           if (bangunan.isNotEmpty) {
             detailLokasi += ", Dekat atau berada di dalam area $bangunan";

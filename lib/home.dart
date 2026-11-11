@@ -57,10 +57,13 @@ class _HomePageState extends State<HomePage> {
     });
 
     await Future.delayed(const Duration(milliseconds: 1000));
-    String kalimatSapaan1 =
-        "Halo Pengguna. Silakan tekan layar untuk memulai percakapan.";
-    String kalimatSapaan2 =
-        "Anda bisa menanyakan perintah informasi umum seperti hari, tanggal, jam, cuaca dan lokasi anda saat ini.";
+    
+    String 
+    kalimatSapaan1 = "Halo Pengguna.";
+    String 
+    kalimatSapaan2 = "Silakan tekan layar untuk memulai percakapan.";
+    String 
+    kalimatSapaan3 = "Anda bisa menanyakan perintah informasi umum seperti hari, tanggal, jam, cuaca dan lokasi anda saat ini.";
 
     if (mounted) {
       setState(() {
@@ -70,8 +73,7 @@ class _HomePageState extends State<HomePage> {
 
     await _tts.awaitSpeakCompletion(true);
     await _tts.speak(kalimatSapaan1);
-    await Future.delayed(const Duration(milliseconds: 500));
-
+    await Future.delayed(const Duration(milliseconds: 300));
     if (mounted) {
       setState(() {
         _displayedGreeting = "";
@@ -79,6 +81,14 @@ class _HomePageState extends State<HomePage> {
     }
 
     await _tts.speak(kalimatSapaan2);
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      setState(() {
+        _displayedGreeting = "";
+      });
+    }
+
+    await _tts.speak(kalimatSapaan3);
   }
 
   @override
@@ -145,6 +155,8 @@ class _HomePageState extends State<HomePage> {
   void _handleScreenTap() {
     HapticFeedback.mediumImpact();
 
+    _tts.stop();
+
     if (isResultAvailable) {
       _tts.stop();
       setState(() {
@@ -161,6 +173,9 @@ class _HomePageState extends State<HomePage> {
       _silenceTimer?.cancel();
       _speech.stop();
     } else {
+      setState(() {
+        _displayedGreeting = "";
+      });
       _startListeningReal();
     }
   }

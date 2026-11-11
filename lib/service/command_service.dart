@@ -33,10 +33,10 @@ class CommandService {
       return weatherService;
     }
     else if (text.isEmpty) {
-        return "Maaf, saya tidak mengerti pertanyaan Anda.";
+        return "Suara tidak terdengar, silakan ketuk layar lagi.";
     }
     else {
-        return '"Suara tidak terdengar, silakan ketuk layar lagi" "$text"';
+        return 'Maaf, saya tidak mengerti perintah "$text".';
     }
   }
 }
