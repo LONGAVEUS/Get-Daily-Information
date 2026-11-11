@@ -36,7 +36,7 @@ class CommandService {
         return "Maaf, saya tidak mengerti pertanyaan Anda.";
     }
     else {
-        return 'Maaf, saya belum mengerti perintah "$text"';
+        return '"Suara tidak terdengar, silakan ketuk layar lagi" "$text"';
     }
   }
 }

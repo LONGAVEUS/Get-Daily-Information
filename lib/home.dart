@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt; 
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'service/command_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -19,9 +19,11 @@ class _HomePageState extends State<HomePage> {
   bool hasSpoken = false;
   Timer? _silenceTimer;
 
-  String _recognizedWords = ""; 
-  String _teksHasilJawaban = ""; 
-  final stt.SpeechToText _speech = stt.SpeechToText(); 
+  String _recognizedWords = "";
+  String _teksHasilJawaban = "";
+
+  String _displayedGreeting = "";
+  final stt.SpeechToText _speech = stt.SpeechToText();
 
   final Color neonYellow = const Color(0xFFE6FF00);
   final Color textWhite = Colors.white;
@@ -38,18 +40,52 @@ class _HomePageState extends State<HomePage> {
     await _tts.setLanguage("id-ID");
     await _tts.setSpeechRate(0.45);
     await _tts.setVolume(1.0);
-    
+
     await _speech.initialize();
 
+    _tts.setProgressHandler((
+      String text,
+      int startOffset,
+      int endOffset,
+      String word,
+    ) {
+      if (mounted && !isResultAvailable) {
+        setState(() {
+          _displayedGreeting = text.substring(0, endOffset);
+        });
+      }
+    });
+
     await Future.delayed(const Duration(milliseconds: 1000));
-    _tts.speak("Halo Pengguna. Informasi Apa yg ingin anda ketahui?");
+    String kalimatSapaan1 =
+        "Halo Pengguna. Silakan tekan layar untuk memulai percakapan.";
+    String kalimatSapaan2 =
+        "Anda bisa menanyakan perintah informasi umum seperti hari, tanggal, jam, cuaca dan lokasi anda saat ini.";
+
+    if (mounted) {
+      setState(() {
+        _displayedGreeting = "";
+      });
+    }
+
+    await _tts.awaitSpeakCompletion(true);
+    await _tts.speak(kalimatSapaan1);
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (mounted) {
+      setState(() {
+        _displayedGreeting = "";
+      });
+    }
+
+    await _tts.speak(kalimatSapaan2);
   }
 
   @override
   void dispose() {
     _silenceTimer?.cancel();
     _tts.stop();
-    _speech.stop(); 
+    _speech.stop();
     super.dispose();
   }
 
@@ -58,8 +94,10 @@ class _HomePageState extends State<HomePage> {
     _silenceTimer = Timer(const Duration(seconds: 3), () {
       if (mounted && isListening) {
         if (!hasSpoken) {
-          setState(() { isListening = false; });
-          _speech.stop(); 
+          setState(() {
+            isListening = false;
+          });
+          _speech.stop();
           HapticFeedback.lightImpact();
         } else {
           _processResult();
@@ -68,7 +106,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  
   void _startListeningReal() async {
     setState(() {
       isListening = true;
@@ -83,24 +120,24 @@ class _HomePageState extends State<HomePage> {
       onResult: (result) {
         setState(() {
           hasSpoken = true;
-          _recognizedWords = result.recognizedWords; 
+          _recognizedWords = result.recognizedWords;
         });
-        _startSilenceTimer(); 
+        _startSilenceTimer();
       },
     );
   }
 
   Future<void> _processResult() async {
-    _speech.stop(); 
+    _speech.stop();
 
     String jawaban = await CommandService().generateResponse(_recognizedWords);
 
     setState(() {
       isListening = false;
       isResultAvailable = true;
-      _teksHasilJawaban = jawaban; 
+      _teksHasilJawaban = jawaban;
     });
-    
+
     HapticFeedback.heavyImpact();
     _tts.speak(jawaban);
   }
@@ -109,12 +146,18 @@ class _HomePageState extends State<HomePage> {
     HapticFeedback.mediumImpact();
 
     if (isResultAvailable) {
-      setState(() { isResultAvailable = false; });
+      setState(() {
+        isResultAvailable = false;
+        _displayedGreeting = "";
+      });
       _tts.stop();
     } else if (isListening) {
-      setState(() { isListening = false; });
+      setState(() {
+        isListening = false;
+        _displayedGreeting = "";
+      });
       _silenceTimer?.cancel();
-      _speech.stop(); 
+      _speech.stop();
     } else {
       _startListeningReal();
     }
@@ -125,7 +168,8 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: backgroundBlack,
       body: Container(
-        width: double.infinity, height: double.infinity,
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           color: backgroundBlack,
           border: Border.all(color: neonYellow, width: 4.0),
@@ -151,27 +195,42 @@ class _HomePageState extends State<HomePage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Tekan Layar', 
-        style: TextStyle(
-          fontSize: 60, 
-          fontWeight: FontWeight.bold, 
-          color: textWhite
-          )),
+        Text(
+          'Tekan Layar',
+          style: TextStyle(
+            fontSize: 60,
+            fontWeight: FontWeight.bold,
+            color: textWhite,
+          ),
+        ),
         const SizedBox(height: 5),
         Text(
           'Tekan layar dimana pun',
-           style: TextStyle(
+          style: TextStyle(
             fontSize: 18,
-             fontWeight: FontWeight.bold,
-              color: textWhite)),
+            fontWeight: FontWeight.bold,
+            color: textWhite,
+          ),
+        ),
         const SizedBox(height: 30),
         _buildMicButton(),
         const SizedBox(height: 20),
-        Text('Halo Pengguna!',
-         style: TextStyle(
-          fontSize: 25,
-           fontWeight: FontWeight.bold,
-            color: textWhite)),
+
+        // Bagian teks yang beranimasi sesuai suara
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Text(
+            _displayedGreeting,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize:
+                  20, // Diperkecil sedikit agar kalimat panjang muat dan rapi
+              fontWeight: FontWeight.bold,
+              color: textWhite,
+              height: 1.4, // Memberi jarak antar baris teks
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -182,13 +241,13 @@ class _HomePageState extends State<HomePage> {
       children: [
         SpinKitThreeBounce(color: neonYellow, size: 40.0),
         const SizedBox(height: 30),
-       
+
         Text(
           _recognizedWords.isEmpty ? 'Mendengarkan...' : _recognizedWords,
           style: TextStyle(
-            fontSize: 24, 
+            fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: textWhite
+            color: textWhite,
           ),
           textAlign: TextAlign.center,
         ),
@@ -205,12 +264,12 @@ class _HomePageState extends State<HomePage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            '"$_teksHasilJawaban"', 
+            '"$_teksHasilJawaban"',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: textWhite,
-              height: 1.3
+              height: 1.3,
             ),
             textAlign: TextAlign.center,
           ),
@@ -223,8 +282,10 @@ class _HomePageState extends State<HomePage> {
     return ElevatedButton(
       onPressed: _handleScreenTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundBlack, shape: const CircleBorder(),
-        padding: const EdgeInsets.all(30), side: BorderSide(color: neonYellow, width: 3),
+        backgroundColor: backgroundBlack,
+        shape: const CircleBorder(),
+        padding: const EdgeInsets.all(30),
+        side: BorderSide(color: neonYellow, width: 3),
       ),
       child: Icon(Icons.graphic_eq, color: neonYellow, size: 32),
     );
