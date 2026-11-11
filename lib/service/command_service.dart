@@ -13,7 +13,6 @@ class CommandService {
     if (text.contains("jam") || text.contains("waktu") || text.contains("pukul") || text.contains("jam berapa sekarang")
       || text.contains("pukul berapa sekarang")) {
         return _timeService.getCurrentTime();
-      
     }
     else if (text.contains("tanggal") || text.contains("hari") || text.contains("bulan") || text.contains("tahun")
         || text.contains("tanggal berapa sekarang") || text.contains("hari apa ini") || text.contains("bulan apa sekarang")
@@ -26,17 +25,24 @@ class CommandService {
       return "$cityName.";
     }
     else if (text.contains("cuaca") || text.contains("hujan") || text.contains("cerah") || text.contains("berawan") || text.contains("berkabut")
-        || text.contains("salju") || text.contains("hujan") || text.contains("cuaca hari ini") || text.contains("hujankah hari ini")
+        || text.contains("salju") || text.contains("cuaca hari ini") || text.contains("hujankah hari ini")
         || text.contains("panaskah hari ini") || text.contains("kondisi cuaca saat ini")) {
 
       String weatherService = await _weatherService.getWeatherInfo();
       return weatherService;
     }
-    else if (text.isEmpty) {
-        return "Suara tidak terdengar, silakan ketuk layar lagi.";
+  
+    else if (text.contains("perintah") || text.contains("bantuan") || text.contains("apa saja") 
+        || text.contains("informasi apa") || text.contains("bisa apa") || text.contains("tanya apa")) {
+      return "Anda bisa menanyakan informasi umum seperti hari, tanggal, jam, cuaca, dan lokasi Anda saat ini.";
     }
+    
+    else if (text.trim().isEmpty) {
+      return "Suara tidak terdengar, silakan ketuk layar lagi.";
+    } 
+
     else {
-        return 'Maaf, saya tidak mengerti perintah "$text".';
+      return 'Maaf, saya tidak mengerti perintah "$text".';
     }
   }
 }
