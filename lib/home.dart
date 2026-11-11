@@ -146,10 +146,12 @@ class _HomePageState extends State<HomePage> {
     HapticFeedback.mediumImpact();
 
     if (isResultAvailable) {
+      _tts.stop();
       setState(() {
         isResultAvailable = false;
-        _displayedGreeting = "";
+        _displayedGreeting = ""; 
       });
+      _startListeningReal();
       _tts.stop();
     } else if (isListening) {
       setState(() {
